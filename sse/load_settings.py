@@ -33,6 +33,7 @@ def load_settings():
                 "daemonize": "start",
                 "host": "127.0.0.1",
                 "port": 5001,
-            }
+            },
+            "project": {}
         }
 
