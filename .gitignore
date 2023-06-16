@@ -1,0 +1,3 @@
+*.pyc
+llama-edge.db
+sqlite-vss
