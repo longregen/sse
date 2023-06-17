@@ -7,6 +7,9 @@ from .load_settings import load_settings
 
 app = Flask(__name__)
 
+settings = load_settings()
+db_conn = get_conn(settings)
+
 @app.route('/health', methods=['GET'])
 def get_health():
     return {"status": "ok"}
@@ -18,18 +21,17 @@ def post_crawl():
     includes = request.json.get('include', [])
     excludes = request.json.get('exclude', [])
 
-    settings = load_settings()
     if "project" not in settings:
         settings["project"] = {}
-    db_conn = get_conn(settings)
 
     settings["project"]["name"] = project
     for x in includes:
         settings["crawl"]["include"].append(x)
     for x in excludes:
         settings["crawl"]["exclude"].append(x)
-    crawl(settings, db_conn, directory)
-    return {"status": "completed"}
+    print(settings, directory)
+    res = crawl(settings, db_conn, directory)
+    return { "status": "completed", "data": res }
 
 @app.route('/query', methods=['POST'])
 def post_query():
@@ -42,7 +44,6 @@ def post_query():
         settings["project"] = {}
     if "query" not in settings:
         settings["query"] = {}
-    db_conn = get_conn(settings)
 
     settings["project"]["name"] = project
     settings["query"]["limit"] = limit

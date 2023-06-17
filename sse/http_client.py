@@ -12,7 +12,10 @@ def http_main(target, settings, args):
             for x in args.exclude:
                 settings["crawl"]["exclude"].append(x)
         res = http_crawl(target, args.project, args.dir, settings["crawl"]["include"], settings["crawl"]["exclude"])
-        print(json.dumps(res, indent=2, sort_keys=True, default=str))
+        if res and "data" in res and len(res["data"]) > 0:
+            for d in res["data"]:
+                if d:
+                    print(f'{d[0]}: {len(d[1])} chunks')
 
     elif args.command == 'query':
         res = http_query(target, args.project, args.query, args.limit)
