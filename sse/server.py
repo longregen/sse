@@ -1,4 +1,5 @@
 from flask import Flask, request
+import traceback
 
 from .query import query
 from .crawl import crawl
@@ -35,19 +36,28 @@ def post_crawl():
 
 @app.route('/query', methods=['POST'])
 def post_query():
-    project = request.json.get('project')
-    query_string = request.json.get('query')
-    limit = request.json.get('limit', 5)
+    try:
+        project = request.json.get('project')
+        query_string = request.json.get('query')
+        limit = request.json.get('limit', 5)
+        try:
+          extra_params = request.json.get('extra_params', None)
+        except:
+          extra_params = None
 
-    settings = load_settings()
-    if "project" not in settings:
-        settings["project"] = {}
-    if "query" not in settings:
-        settings["query"] = {}
+        settings = load_settings()
+        if "project" not in settings:
+            settings["project"] = {}
+        if "query" not in settings:
+            settings["query"] = {}
 
-    settings["project"]["name"] = project
-    settings["query"]["limit"] = limit
-    return {"status": "completed", "result": query(settings, db_conn, query_string)}
+        settings["project"]["name"] = project
+        settings["query"]["limit"] = limit
+        return {"status": "completed", "result": query(settings, db_conn, query_string, extra_params)}
+    except Exception as e:
+        print(f'Error: {e}')
+        traceback.print_exc()
+        return {"status": "error"}
 
 def run_server(host: str, port: int):
     app.run(host=host, port=port)

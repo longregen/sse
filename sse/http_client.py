@@ -1,4 +1,3 @@
-import json
 import os
 import requests
 
@@ -19,9 +18,12 @@ def http_main(target, settings, args):
 
     elif args.command == 'query':
         res = http_query(target, args.project, args.query, args.limit)
-        common_path = os.path.commonprefix([x[1] for x in res])
+        common_path = os.path.commonprefix([x[0] for x in res["result"]])
         for f in res["result"]:
-            print(f'    {f[1].replace(common_path, "")} [distance {f[8]:.5}]')
+            file = f[0]
+            distance = f[3]
+            content = f[2]
+            print(f'    {file.replace(common_path, "")} [distance {distance:.4}]')
 
 def http_crawl(target, project, directory, include_patterns=None, exclude_patterns=None):
     data = {

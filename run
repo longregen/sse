@@ -1,0 +1,3 @@
+#! /usr/bin/env bash
+
+NIXPKGS_ALLOW_UNFREE=1 nix-shell -p python310Packages.pytorch-bin python310Packages.psycopg2 python310Packages.gunicorn python310Packages.flask --run "source .venv/bin/activate; python main.py server"

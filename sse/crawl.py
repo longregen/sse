@@ -1,5 +1,5 @@
 import os
-import json
+import base64
 import sys
 import uuid
 from datetime import datetime
@@ -26,12 +26,20 @@ def crawl(settings, db_conn, path):
             dirs[:] = [d for d in dirs if d not in exclude]
             for file_name in files:
                 file_path = os.path.join(root, file_name)
-                res.append(process_file(settings, db_conn, file_path))
+                result = process_file(settings, db_conn, file_path)
+                if result:
+                    res.append(result)
     return res
 
 def process_file(settings, db_conn, file_path):
-    with open(file_path, "r", encoding='utf-8') as f:
+    with open(file_path, mode='rb') as f:
         file_contents = f.read()
+        if not file_contents:
+            return
+        try:
+            file_contents = file_contents.decode('utf-8')
+        except:
+            file_contents = base64.b32encode(file_contents).decode('utf-8')
         content_hash = get_sha256(file_contents.encode('utf-8'))
         model_id = f'{settings["embedding"]["family"]}:{settings["embedding"]["model"]}:{settings["embedding"]["style"]}'
 
