@@ -1,7 +1,7 @@
 import sys
-from .model import tokenizer
+from .tokenizer import tokenizer
 
-def chunk_file(settings, file_contents):
+def chunk_file(settings, filename, file_contents):
     i = 0
     chunks = []
     while i + 1 < len(file_contents):
@@ -16,5 +16,5 @@ def chunk_file(settings, file_contents):
         end = tokenization.offset_mapping[-2][1]
         chunks.append(file_contents[i:i+end])
         i = i + end
-    print(f'» split into {len(chunks)} chunks', file=sys.stderr)
+    print(f'» split {filename} into {len(chunks)} chunks', file=sys.stderr)
     return chunks

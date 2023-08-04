@@ -22,7 +22,6 @@ def http_main(target, settings, args):
         for f in res["result"]:
             file = f[0]
             distance = f[3]
-            content = f[2]
             print(f'    {file.replace(common_path, "")} [distance {distance:.4}]')
 
 def http_crawl(target, project, directory, include_patterns=None, exclude_patterns=None):

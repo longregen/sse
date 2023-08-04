@@ -15,6 +15,8 @@ def load_settings():
                 "model": "githash:d94960066016d2064f2a3a2dbc65107a2b48230d",
                 "style": "chunked-512",
                 "max_length": 512,
+                "url": "http://localhost:5000/api/embedding",
+                "local": False,
                 "store": "passage: ",
                 "query": "query: ",
             },
@@ -26,8 +28,10 @@ def load_settings():
                 "port": "5432"
             },
             "crawl": {
-                "exclude": ["package-lock.json", "package.json", "node_modules", ".gitignore"],
-                "include": ["py" "ts", "js", "json", "md", "tsx", "jsx" "txt"]
+                "exclude": [
+                    "package-lock.json", "package.json", "node_modules", ".png", ".pdf", ".svg", ".git"
+                ],
+                "include": ["py", "ts", "js", "json", "md", "tsx", "jsx", "txt"]
             },
             "server": {
                 "daemonize": "start",

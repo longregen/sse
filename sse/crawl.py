@@ -1,5 +1,5 @@
 import os
-import base64
+import requests
 import sys
 import uuid
 from datetime import datetime
@@ -7,28 +7,20 @@ from datetime import datetime
 from .db import store_embedding_db
 from .get_sha256 import get_sha256
 from .chunk_file import chunk_file
-from .model import embed
 
 def crawl(settings, db_conn, path):
     exclude = set(settings["crawl"]["exclude"])
     include = set(settings["crawl"]["include"])
     res = []
 
-    if exclude is None:
-        exclude = []
-    if os.path.isfile(path) \
-        and any(path.count(pattern) for pattern in include) \
-        and all(not path.count(pattern) for pattern in exclude):
+    matchInclude = any(path.count(pattern) for pattern in include)
+    matchExclude = any(path.count(pattern) for pattern in exclude)
+    print(f'Found {path} includes: {matchInclude}, exclude: {matchExclude}', file=sys.stderr)
+    if os.path.isfile(path) and matchInclude and not matchExclude:
         res.append(process_file(settings, db_conn, path))
-
-    elif os.path.isdir(path):
-        for root, dirs, files in os.walk(path):
-            dirs[:] = [d for d in dirs if d not in exclude]
-            for file_name in files:
-                file_path = os.path.join(root, file_name)
-                result = process_file(settings, db_conn, file_path)
-                if result:
-                    res.append(result)
+    elif os.path.isdir(path) and not matchExclude:
+        for file in os.listdir(path):
+            crawl(settings, db_conn, os.path.join(path, file))
     return res
 
 def process_file(settings, db_conn, file_path):
@@ -39,7 +31,7 @@ def process_file(settings, db_conn, file_path):
         try:
             file_contents = file_contents.decode('utf-8')
         except:
-            file_contents = base64.b32encode(file_contents).decode('utf-8')
+            return
         content_hash = get_sha256(file_contents.encode('utf-8'))
         model_id = f'{settings["embedding"]["family"]}:{settings["embedding"]["model"]}:{settings["embedding"]["style"]}'
 
@@ -54,7 +46,7 @@ def process_file(settings, db_conn, file_path):
 
 def process_contents(settings, db_conn, file_path, file_contents, content_hash, model_id):
     project = settings["project"]["name"]
-    chunks = chunk_file(settings, file_contents)
+    chunks = chunk_file(settings, file_path, file_contents)
     created_at = datetime.now()
     store_embedding_db(db_conn, "source_embeddings", [content_hash, project, model_id, created_at])
     id = str(uuid.uuid4())
@@ -63,7 +55,14 @@ def process_contents(settings, db_conn, file_path, file_contents, content_hash, 
     res = []
     for source_chunk_index, chunk_data in enumerate(chunks):
         chunk_hash = get_sha256(chunk_data.encode('utf-8'))
-        chunk_embedding = embed(settings["embedding"]["store"] + chunk_data)
+        if settings["embedding"]["local"]:
+            from .model import embed
+            chunk_embedding = embed(settings["embedding"]["store"] + chunk_data)
+        else:
+            response = requests.post(settings["embedding"]["url"], json={
+                "prompt": settings["embedding"]["store"] + chunk_data
+            })
+            chunk_embedding = response.json()
         if len(chunk_embedding) < 0:
             print(f'file {file_path} has len(chunk_embedding) = {len(chunk_embedding)}, skipping')
             continue

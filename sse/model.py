@@ -1,13 +1,16 @@
 import torch
 from torch import Tensor
-from transformers import AutoTokenizer, AutoModel
+from transformers import AutoModel
 
 import sys
 
+from .tokenizer import tokenizer
+
 print ('» loading model e5-large-v2...', file=sys.stderr)
-tokenizer = AutoTokenizer.from_pretrained('intfloat/e5-large-v2')
-DEV = torch.device('cuda:0')
-model = AutoModel.from_pretrained('intfloat/e5-large-v2').to(DEV)
+# Check if a GPU is available and if not, use the CPU
+DEV = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
+model = AutoModel.from_pretrained('/data/models/e5-large-v2').to(DEV)
 print ('» loaded e5-large-v2 OK', file=sys.stderr)
 
 def average_pool(last_hidden_states: Tensor,
